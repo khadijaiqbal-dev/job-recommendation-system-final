@@ -4,3 +4,6 @@
 /backend/package-lock.json
 /backend/.env
 /frontend/.env
+/frontend/pnpm-lock.yaml
+/backend/dist
+/backend/pnpm-lock.yaml
