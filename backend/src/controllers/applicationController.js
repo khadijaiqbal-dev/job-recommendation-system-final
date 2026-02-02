@@ -14,12 +14,13 @@ const getUserApplications = async (req, res) => {
         j.salary_min,
         j.salary_max,
         j.currency,
-        j.company_name
+        c.name as company_name
       FROM job_applications ja
       JOIN job_postings j ON ja.job_posting_id = j.id
+      JOIN companies c ON j.company_id = c.id
       WHERE ja.user_id = $1
       ORDER BY ja.applied_at DESC`,
-      [userId]
+      [userId],
     );
 
     const applications = result.rows.map((app) => ({
@@ -72,7 +73,7 @@ const getApplicationById = async (req, res) => {
       FROM job_applications ja
       JOIN job_postings j ON ja.job_posting_id = j.id
       WHERE ja.id = $1 AND ja.user_id = $2`,
-      [id, userId]
+      [id, userId],
     );
 
     if (result.rows.length === 0) {
@@ -116,13 +117,28 @@ const updateApplicationStatus = async (req, res) => {
     const { status, notes } = req.body;
     const adminId = req.user.id;
 
-    const validStatuses = ["APPLIED", "SHORT_LISTED", "REJECTED", "CALL_FOR_INTERVIEW", "SHORT_LISTED_BY_COMPANY", "SELECTED"];
+    const validStatuses = [
+      "APPLIED",
+      "SHORT_LISTED",
+      "REJECTED",
+      "CALL_FOR_INTERVIEW",
+      "SHORT_LISTED_BY_COMPANY",
+      "SELECTED",
+    ];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status. Valid statuses: APPLIED, SHORT_LISTED, REJECTED, CALL_FOR_INTERVIEW, SHORT_LISTED_BY_COMPANY, SELECTED" });
+      return res
+        .status(400)
+        .json({
+          error:
+            "Invalid status. Valid statuses: APPLIED, SHORT_LISTED, REJECTED, CALL_FOR_INTERVIEW, SHORT_LISTED_BY_COMPANY, SELECTED",
+        });
     }
 
     // Get current application
-    const currentApp = await pool.query("SELECT status FROM job_applications WHERE id = $1", [id]);
+    const currentApp = await pool.query(
+      "SELECT status FROM job_applications WHERE id = $1",
+      [id],
+    );
     if (currentApp.rows.length === 0) {
       return res.status(404).json({ error: "Application not found" });
     }
@@ -130,13 +146,16 @@ const updateApplicationStatus = async (req, res) => {
     const oldStatus = currentApp.rows[0].status;
 
     // Update application status
-    const result = await pool.query("UPDATE job_applications SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *", [status, id]);
+    const result = await pool.query(
+      "UPDATE job_applications SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *",
+      [status, id],
+    );
 
     // Create status history entry
     await pool.query(
       `INSERT INTO application_status_history (application_id, old_status, new_status, changed_by, notes) 
        VALUES ($1, $2, $3, $4, $5)`,
-      [id, oldStatus, status, adminId, notes || null]
+      [id, oldStatus, status, adminId, notes || null],
     );
 
     res.json({
@@ -156,13 +175,18 @@ const getApplicationStatusHistory = async (req, res) => {
     const userId = req.user.id;
 
     // Verify user owns this application or is admin
-    const appCheck = await pool.query("SELECT user_id FROM job_applications WHERE id = $1", [id]);
+    const appCheck = await pool.query(
+      "SELECT user_id FROM job_applications WHERE id = $1",
+      [id],
+    );
     if (appCheck.rows.length === 0) {
       return res.status(404).json({ error: "Application not found" });
     }
 
     // Check if user is admin or owns the application
-    const userCheck = await pool.query("SELECT role FROM users WHERE id = $1", [userId]);
+    const userCheck = await pool.query("SELECT role FROM users WHERE id = $1", [
+      userId,
+    ]);
     const isAdmin = userCheck.rows[0]?.role === "admin";
     const isOwner = appCheck.rows[0].user_id === userId;
 
@@ -181,7 +205,7 @@ const getApplicationStatusHistory = async (req, res) => {
       LEFT JOIN users u ON ash.changed_by = u.id
       WHERE ash.application_id = $1
       ORDER BY ash.created_at ASC`,
-      [id]
+      [id],
     );
 
     res.json({
