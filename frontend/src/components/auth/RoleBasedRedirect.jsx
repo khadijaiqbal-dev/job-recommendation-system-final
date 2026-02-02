@@ -1,39 +1,31 @@
-import React, { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const RoleBasedRedirect = () => {
-  const navigate = useNavigate()
+  const { isAuthenticated, isLoading, user } = useAuth();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    
-    if (!token) {
-      navigate('/login')
-      return
-    }
+  // Show loading spinner while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]))
-      const userRole = payload.role
+  // Not authenticated - redirect to login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
-      // Redirect based on user role
-      if (userRole === 'admin') {
-        navigate('/admin')
-      } else {
-        navigate('/dashboard')
-      }
-    } catch (error) {
-      console.error('Error decoding token:', error)
-      localStorage.removeItem('token')
-      navigate('/login')
-    }
-  }, [navigate])
+  // Redirect based on user role
+  if (user?.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-    </div>
-  )
-}
+  // Default to job seeker dashboard
+  return <Navigate to="/dashboard" replace />;
+};
 
-export default RoleBasedRedirect
+export default RoleBasedRedirect;
