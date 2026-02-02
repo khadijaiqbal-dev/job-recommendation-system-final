@@ -1,45 +1,40 @@
-import React from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-const ProtectedRoute = ({ children, requiredRole = null }) => {
-  const token = localStorage.getItem('token')
-  const location = useLocation()
+const ProtectedRoute = ({ children, allowedRoles = [], redirectTo = '/login' }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const location = useLocation();
 
-  // If no token, redirect to login
-  if (!token) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+  // Show loading spinner while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
-  try {
-    // Decode JWT token to get user info
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    const userRole = payload.role
+  // Not authenticated - redirect to login
+  if (!isAuthenticated) {
+    return <Navigate to={redirectTo} state={{ from: location }} replace />;
+  }
 
-    // If role is required and user doesn't have it, redirect to appropriate dashboard
-    if (requiredRole && userRole !== requiredRole) {
+  // Check role-based access if roles are specified
+  if (allowedRoles.length > 0) {
+    const userRole = user?.role;
+
+    if (!allowedRoles.includes(userRole)) {
+      // User doesn't have required role - redirect to appropriate dashboard
       if (userRole === 'admin') {
-        return <Navigate to="/admin" replace />
+        return <Navigate to="/admin" replace />;
       } else {
-        return <Navigate to="/dashboard" replace />
+        return <Navigate to="/dashboard" replace />;
       }
     }
-
-    // If user is admin but trying to access job-seeker routes, redirect to admin
-    if (userRole === 'admin' && !requiredRole && location.pathname.startsWith('/dashboard')) {
-      return <Navigate to="/admin" replace />
-    }
-
-    // If user is job-seeker but trying to access admin routes, redirect to dashboard
-    if (userRole === 'job_seeker' && location.pathname.startsWith('/admin')) {
-      return <Navigate to="/dashboard" replace />
-    }
-
-    return children
-  } catch (error) {
-    console.error('Error decoding token:', error)
-    localStorage.removeItem('token')
-    return <Navigate to="/login" replace />
   }
-}
 
-export default ProtectedRoute
+  return children;
+};
+
+export default ProtectedRoute;

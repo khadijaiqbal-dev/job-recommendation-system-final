@@ -1,36 +1,39 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import DashboardLayout from "../components/DashboardLayout";
-import AdminJobManagement from "./AdminJobManagement";
-import { UserManagement } from "./UserManagement";
-import CompanyManagement from "./CompanyManagement";
-import ApplicationManagement from "./ApplicationManagement";
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import DashboardLayout from '../components/DashboardLayout';
+import AdminJobManagement from './AdminJobManagement';
+import { UserManagement } from './UserManagement';
+import CompanyManagement from './CompanyManagement';
+import ApplicationManagement from './ApplicationManagement';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/");
+    logout();
+    navigate('/');
   };
+
   const tabs = [
     {
-      id: "jobs",
-      name: "Job Management",
+      id: 'jobs',
+      name: 'Job Management',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6"
+            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
           />
         </svg>
       ),
     },
     {
-      id: "companies",
-      name: "Company Management",
+      id: 'companies',
+      name: 'Company Management',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -43,22 +46,22 @@ const AdminDashboard = () => {
       ),
     },
     {
-      id: "users",
-      name: "User Management",
+      id: 'users',
+      name: 'User Management',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
           />
         </svg>
       ),
     },
     {
-      id: "applications",
-      name: "Application Management",
+      id: 'applications',
+      name: 'Application Management',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -72,36 +75,46 @@ const AdminDashboard = () => {
     },
   ];
 
+  const displayName = user?.firstName || user?.email?.split('@')[0] || 'Admin';
+
   const footerContent = (
     <div className="flex items-center">
       <div className="flex-shrink-0">
-        <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
-          <span className="text-white font-semibold text-sm">A</span>
+        <div className="h-10 w-10 rounded-full bg-purple-600 flex items-center justify-center">
+          <span className="text-white font-semibold text-sm">
+            {displayName.charAt(0).toUpperCase()}
+          </span>
         </div>
       </div>
       <div className="ml-3">
-        <p className="text-sm font-medium text-gray-900">Admin</p>
+        <p className="text-sm font-medium text-gray-900">{displayName}</p>
         <p className="text-xs text-gray-500">Administrator</p>
       </div>
     </div>
   );
 
+  const getHeaderTitle = (activeTab) => {
+    const tab = tabs.find((t) => t.id === activeTab);
+    return tab?.name || 'Admin Dashboard';
+  };
+
   return (
     <DashboardLayout
       tabs={tabs}
       defaultTab="jobs"
-      title="Admin Panel"
-      subtitle="Job Recommendation"
+      title="JobMatch"
+      subtitle="Admin Panel"
+      headerTitle={getHeaderTitle}
       headerSubtitle="Manage your job recommendation system"
       footerContent={footerContent}
       onLogout={handleLogout}
     >
       {(activeTab) => (
         <>
-          {activeTab === "jobs" && <AdminJobManagement />}
-          {activeTab === "companies" && <CompanyManagement />}
-          {activeTab === "users" && <UserManagement />}
-          {activeTab === "applications" && <ApplicationManagement />}
+          {activeTab === 'jobs' && <AdminJobManagement />}
+          {activeTab === 'companies' && <CompanyManagement />}
+          {activeTab === 'users' && <UserManagement />}
+          {activeTab === 'applications' && <ApplicationManagement />}
         </>
       )}
     </DashboardLayout>
