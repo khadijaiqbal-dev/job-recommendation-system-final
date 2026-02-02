@@ -96,7 +96,20 @@ const createJob = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { companyId, companyName, title, description, requirements, skillsRequired, location, jobType, experienceLevel, salaryMin, salaryMax, currency = "USD" } = req.body;
+    const {
+      companyId,
+      companyName,
+      title,
+      description,
+      requirements,
+      skillsRequired,
+      location,
+      jobType,
+      experienceLevel,
+      salaryMin,
+      salaryMax,
+      currency = "USD",
+    } = req.body;
 
     // Use company_id if provided, otherwise use company_name (for backward compatibility)
     let companyIdValue = companyId;
@@ -104,7 +117,10 @@ const createJob = async (req, res) => {
 
     // If company_id is provided, get company name
     if (companyIdValue) {
-      const companyResult = await pool.query("SELECT name FROM companies WHERE id = $1", [companyIdValue]);
+      const companyResult = await pool.query(
+        "SELECT name FROM companies WHERE id = $1",
+        [companyIdValue],
+      );
       if (companyResult.rows.length === 0) {
         return res.status(400).json({ error: "Company not found" });
       }
@@ -132,7 +148,7 @@ const createJob = async (req, res) => {
         salaryMax,
         currency,
         req.user.id,
-      ]
+      ],
     );
 
     const job = result.rows[0];
@@ -173,15 +189,27 @@ const createJob = async (req, res) => {
 };
 
 // Get all job postings with search and filters
+// Get all job postings with search and filters
 const getJobs = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = "", location = "", jobType = "", experienceLevel = "", salaryMin = "", salaryMax = "", companyName = "" } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      location = "",
+      jobType = "",
+      experienceLevel = "",
+      salaryMin = "",
+      salaryMax = "",
+      companyName = "",
+    } = req.query;
 
     const offset = (page - 1) * limit;
 
     let query = `
       SELECT 
         j.*,
+        c.name as company_name,
         COALESCE(
           (
             SELECT ARRAY_AGG(s.name)
@@ -193,6 +221,7 @@ const getJobs = async (req, res) => {
           ARRAY[]::TEXT[]
         ) as job_skills
       FROM job_postings j
+      LEFT JOIN companies c ON j.company_id = c.id
       WHERE j.is_active = true
     `;
     const queryParams = [];
@@ -200,47 +229,47 @@ const getJobs = async (req, res) => {
 
     if (search) {
       paramCount++;
-      query += ` AND (title ILIKE $${paramCount} OR description ILIKE $${paramCount} OR company_name ILIKE $${paramCount})`;
+      query += ` AND (j.title ILIKE $${paramCount} OR j.description ILIKE $${paramCount} OR c.name ILIKE $${paramCount})`;
       queryParams.push(`%${search}%`);
     }
 
     if (location) {
       paramCount++;
-      query += ` AND location ILIKE $${paramCount}`;
+      query += ` AND j.location ILIKE $${paramCount}`;
       queryParams.push(`%${location}%`);
     }
 
     if (jobType) {
       paramCount++;
-      query += ` AND job_type = $${paramCount}`;
+      query += ` AND j.job_type = $${paramCount}`;
       queryParams.push(jobType);
     }
 
     if (experienceLevel) {
       paramCount++;
-      query += ` AND experience_level = $${paramCount}`;
+      query += ` AND j.experience_level = $${paramCount}`;
       queryParams.push(experienceLevel);
     }
 
     if (salaryMin) {
       paramCount++;
-      query += ` AND salary_min >= $${paramCount}`;
+      query += ` AND j.salary_min >= $${paramCount}`;
       queryParams.push(salaryMin);
     }
 
     if (salaryMax) {
       paramCount++;
-      query += ` AND salary_max <= $${paramCount}`;
+      query += ` AND j.salary_max <= $${paramCount}`;
       queryParams.push(salaryMax);
     }
 
     if (companyName) {
       paramCount++;
-      query += ` AND company_name = $${paramCount}`;
+      query += ` AND c.name = $${paramCount}`;
       queryParams.push(companyName);
     }
 
-    query += ` ORDER BY created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    query += ` ORDER BY j.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
     queryParams.push(limit, offset);
 
     const result = await pool.query(query, queryParams);
@@ -248,51 +277,52 @@ const getJobs = async (req, res) => {
     // Get total count
     let countQuery = `
       SELECT COUNT(*) 
-      FROM job_postings
-      WHERE is_active = true
+      FROM job_postings j
+      LEFT JOIN companies c ON j.company_id = c.id
+      WHERE j.is_active = true
     `;
     const countParams = [];
     let countParamCount = 0;
 
     if (search) {
       countParamCount++;
-      countQuery += ` AND (title ILIKE $${countParamCount} OR description ILIKE $${countParamCount} OR company_name ILIKE $${countParamCount})`;
+      countQuery += ` AND (j.title ILIKE $${countParamCount} OR j.description ILIKE $${countParamCount} OR c.name ILIKE $${countParamCount})`;
       countParams.push(`%${search}%`);
     }
 
     if (location) {
       countParamCount++;
-      countQuery += ` AND location ILIKE $${countParamCount}`;
+      countQuery += ` AND j.location ILIKE $${countParamCount}`;
       countParams.push(`%${location}%`);
     }
 
     if (jobType) {
       countParamCount++;
-      countQuery += ` AND job_type = $${countParamCount}`;
+      countQuery += ` AND j.job_type = $${countParamCount}`;
       countParams.push(jobType);
     }
 
     if (experienceLevel) {
       countParamCount++;
-      countQuery += ` AND experience_level = $${countParamCount}`;
+      countQuery += ` AND j.experience_level = $${countParamCount}`;
       countParams.push(experienceLevel);
     }
 
     if (salaryMin) {
       countParamCount++;
-      countQuery += ` AND salary_min >= $${countParamCount}`;
+      countQuery += ` AND j.salary_min >= $${countParamCount}`;
       countParams.push(salaryMin);
     }
 
     if (salaryMax) {
       countParamCount++;
-      countQuery += ` AND salary_max <= $${countParamCount}`;
+      countQuery += ` AND j.salary_max <= $${countParamCount}`;
       countParams.push(salaryMax);
     }
 
     if (companyName) {
       countParamCount++;
-      countQuery += ` AND company_name = $${countParamCount}`;
+      countQuery += ` AND c.name = $${countParamCount}`;
       countParams.push(companyName);
     }
 
@@ -307,7 +337,10 @@ const getJobs = async (req, res) => {
         title: job.title,
         description: job.description,
         requirements: job.requirements,
-        skillsRequired: job.job_skills && job.job_skills.length > 0 ? job.job_skills : job.skills_required || [],
+        skillsRequired:
+          job.job_skills && job.job_skills.length > 0
+            ? job.job_skills
+            : job.skills_required || [],
         location: job.location,
         jobType: job.job_type,
         experienceLevel: job.experience_level,
@@ -337,7 +370,7 @@ const getJobById = async (req, res) => {
       `SELECT *
        FROM job_postings j
        WHERE id = $1 AND is_active = true`,
-      [id]
+      [id],
     );
 
     if (result.rows.length === 0) {
@@ -358,7 +391,8 @@ const getJobById = async (req, res) => {
         title: job.title,
         description: job.description,
         requirements: job.requirements,
-        skillsRequired: jobSkills.length > 0 ? jobSkills : job.skills_required || [],
+        skillsRequired:
+          jobSkills.length > 0 ? jobSkills : job.skills_required || [],
         location: job.location,
         jobType: job.job_type,
         experienceLevel: job.experience_level,
@@ -382,17 +416,25 @@ const applyToJob = async (req, res) => {
     const userId = req.user.id;
 
     // Check if job exists and is active
-    const jobResult = await pool.query("SELECT id FROM job_postings WHERE id = $1 AND is_active = true", [id]);
+    const jobResult = await pool.query(
+      "SELECT id FROM job_postings WHERE id = $1 AND is_active = true",
+      [id],
+    );
 
     if (jobResult.rows.length === 0) {
       return res.status(404).json({ error: "Job not found or inactive" });
     }
 
     // Check if user already applied
-    const existingApp = await pool.query("SELECT id FROM job_applications WHERE user_id = $1 AND job_posting_id = $2", [userId, id]);
+    const existingApp = await pool.query(
+      "SELECT id FROM job_applications WHERE user_id = $1 AND job_posting_id = $2",
+      [userId, id],
+    );
 
     if (existingApp.rows.length > 0) {
-      return res.status(400).json({ error: "You have already applied for this job" });
+      return res
+        .status(400)
+        .json({ error: "You have already applied for this job" });
     }
 
     // Create application
@@ -400,7 +442,7 @@ const applyToJob = async (req, res) => {
       `INSERT INTO job_applications (user_id, job_posting_id, status, cover_letter) 
        VALUES ($1, $2, 'APPLIED', $3) 
        RETURNING *`,
-      [userId, id, coverLetter || null]
+      [userId, id, coverLetter || null],
     );
 
     const application = result.rows[0];
@@ -409,7 +451,7 @@ const applyToJob = async (req, res) => {
     await pool.query(
       `INSERT INTO application_status_history (application_id, old_status, new_status, changed_by) 
        VALUES ($1, NULL, 'APPLIED', $2)`,
-      [application.id, userId]
+      [application.id, userId],
     );
 
     res.json({
@@ -423,7 +465,9 @@ const applyToJob = async (req, res) => {
   } catch (error) {
     console.error("Apply to job error:", error);
     if (error.code === "23505") {
-      return res.status(400).json({ error: "You have already applied for this job" });
+      return res
+        .status(400)
+        .json({ error: "You have already applied for this job" });
     }
     res.status(500).json({ error: "Internal server error" });
   }
@@ -435,7 +479,10 @@ const getJobRecommendations = async (req, res) => {
     const userId = req.user.id;
 
     // Get user skills from profile
-    const userProfileResult = await pool.query(`SELECT skills FROM user_profiles WHERE user_id = $1`, [userId]);
+    const userProfileResult = await pool.query(
+      `SELECT skills FROM user_profiles WHERE user_id = $1`,
+      [userId],
+    );
 
     const userSkills = userProfileResult.rows[0]?.skills || [];
 
@@ -468,7 +515,7 @@ const getJobRecommendations = async (req, res) => {
         ) as job_skills
       FROM job_postings j
       WHERE j.is_active = true
-      ORDER BY j.created_at DESC`
+      ORDER BY j.created_at DESC`,
     );
 
     // Calculate match score for each job
@@ -478,10 +525,16 @@ const getJobRecommendations = async (req, res) => {
         if (jobSkills.length === 0) return null;
 
         // Calculate matching skills
-        const matchingSkills = userSkills.filter((skill) => jobSkills.some((jobSkill) => jobSkill.toLowerCase() === skill.toLowerCase()));
+        const matchingSkills = userSkills.filter((skill) =>
+          jobSkills.some(
+            (jobSkill) => jobSkill.toLowerCase() === skill.toLowerCase(),
+          ),
+        );
 
         // Calculate match percentage
-        const matchScore = Math.round((matchingSkills.length / jobSkills.length) * 100);
+        const matchScore = Math.round(
+          (matchingSkills.length / jobSkills.length) * 100,
+        );
 
         // Only return jobs with at least 30% match
         if (matchScore < 30) return null;
@@ -521,10 +574,27 @@ const updateJob = async (req, res) => {
     }
 
     const { id } = req.params;
-    const { companyId, companyName, title, description, requirements, skillsRequired, location, jobType, experienceLevel, salaryMin, salaryMax, currency, isActive } = req.body;
+    const {
+      companyId,
+      companyName,
+      title,
+      description,
+      requirements,
+      skillsRequired,
+      location,
+      jobType,
+      experienceLevel,
+      salaryMin,
+      salaryMax,
+      currency,
+      isActive,
+    } = req.body;
 
     // Get old values for audit log
-    const oldResult = await pool.query("SELECT * FROM job_postings WHERE id = $1", [id]);
+    const oldResult = await pool.query(
+      "SELECT * FROM job_postings WHERE id = $1",
+      [id],
+    );
     if (oldResult.rows.length === 0) {
       return res.status(404).json({ error: "Job not found" });
     }
@@ -537,7 +607,10 @@ const updateJob = async (req, res) => {
 
     // If company_id is provided, get company name
     if (companyIdValue) {
-      const companyResult = await pool.query("SELECT name FROM companies WHERE id = $1", [companyIdValue]);
+      const companyResult = await pool.query(
+        "SELECT name FROM companies WHERE id = $1",
+        [companyIdValue],
+      );
       if (companyResult.rows.length === 0) {
         return res.status(400).json({ error: "Company not found" });
       }
@@ -567,7 +640,7 @@ const updateJob = async (req, res) => {
         currency,
         isActive,
         id,
-      ]
+      ],
     );
 
     const job = result.rows[0];
@@ -613,7 +686,10 @@ const deleteJob = async (req, res) => {
     const { id } = req.params;
 
     // Get old values for audit log
-    const oldResult = await pool.query("SELECT * FROM job_postings WHERE id = $1", [id]);
+    const oldResult = await pool.query(
+      "SELECT * FROM job_postings WHERE id = $1",
+      [id],
+    );
     if (oldResult.rows.length === 0) {
       return res.status(404).json({ error: "Job not found" });
     }
