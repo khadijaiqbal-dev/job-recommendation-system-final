@@ -11,7 +11,11 @@
     "migrate:up": "node src/migrations/migrate.js up",
     "migrate:rollback": "node src/migrations/migrate.js rollback",
     "migrate:status": "node src/migrations/migrate.js status",
-    "migrate:fresh": "node src/migrations/migrate.js fresh"
+    "migrate:fresh": "node src/migrations/migrate.js fresh",
+    "seed": "node src/seeders/seed.js",
+    "seed:fresh": "node src/seeders/seed.js fresh",
+    "seed:rollback": "node src/seeders/seed.js rollback",
+    "seed:status": "node src/seeders/seed.js status"
   },
   "keywords": [
     "job",
