@@ -1,0 +1,13 @@
+# AI Recommendation Engine Requirements
+# No external APIs - pure Python ML implementation
+
+# Core (built-in modules used, no installation needed)
+# - json
+# - math
+# - re
+# - collections
+# - argparse
+
+# Optional: For advanced features (uncomment if needed)
+# numpy>=1.24.0
+# scikit-learn>=1.3.0

@@ -12,6 +12,8 @@ const companyRoutes = require("./routes/companies");
 const applicationRoutes = require("./routes/applications");
 const skillRoutes = require("./routes/skills");
 const resumeRoutes = require("./routes/resume");
+const savedJobsRoutes = require("./routes/savedJobs");
+const recommendationsRoutes = require("./routes/recommendations");
 
 const app = express();
 
@@ -58,6 +60,8 @@ app.use("/api/companies", companyRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/resume", resumeRoutes);
+app.use("/api/saved-jobs", savedJobsRoutes);
+app.use("/api/recommendations", recommendationsRoutes);
 
 // 404 handler
 app.use((req, res) => {

@@ -412,18 +412,20 @@ const getJobById = async (req, res) => {
 const applyToJob = async (req, res) => {
   try {
     const { id } = req.params;
-    const { coverLetter } = req.body;
+    const { coverLetter, resumeUrl, resumeSource = "profile" } = req.body;
     const userId = req.user.id;
 
     // Check if job exists and is active
     const jobResult = await pool.query(
-      "SELECT id FROM job_postings WHERE id = $1 AND is_active = true",
+      "SELECT id, title, company_name FROM job_postings WHERE id = $1 AND is_active = true",
       [id],
     );
 
     if (jobResult.rows.length === 0) {
       return res.status(404).json({ error: "Job not found or inactive" });
     }
+
+    const job = jobResult.rows[0];
 
     // Check if user already applied
     const existingApp = await pool.query(
@@ -437,19 +439,30 @@ const applyToJob = async (req, res) => {
         .json({ error: "You have already applied for this job" });
     }
 
-    // Create application
+    // Get resume URL based on source
+    let finalResumeUrl = resumeUrl;
+    if (resumeSource === "profile" && !resumeUrl) {
+      // Get resume from user profile
+      const profileResult = await pool.query(
+        "SELECT resume_url FROM user_profiles WHERE user_id = $1",
+        [userId],
+      );
+      finalResumeUrl = profileResult.rows[0]?.resume_url || null;
+    }
+
+    // Create application with resume
     const result = await pool.query(
-      `INSERT INTO job_applications (user_id, job_posting_id, status, cover_letter) 
-       VALUES ($1, $2, 'APPLIED', $3) 
+      `INSERT INTO job_applications (user_id, job_posting_id, status, cover_letter, resume_url, resume_source)
+       VALUES ($1, $2, 'APPLIED', $3, $4, $5)
        RETURNING *`,
-      [userId, id, coverLetter || null],
+      [userId, id, coverLetter || null, finalResumeUrl, resumeSource],
     );
 
     const application = result.rows[0];
 
     // Create initial status history entry
     await pool.query(
-      `INSERT INTO application_status_history (application_id, old_status, new_status, changed_by) 
+      `INSERT INTO application_status_history (application_id, old_status, new_status, changed_by)
        VALUES ($1, NULL, 'APPLIED', $2)`,
       [application.id, userId],
     );
@@ -460,6 +473,10 @@ const applyToJob = async (req, res) => {
         id: application.id,
         status: application.status,
         appliedAt: application.applied_at,
+        resumeUrl: application.resume_url,
+        resumeSource: application.resume_source,
+        jobTitle: job.title,
+        companyName: job.company_name,
       },
     });
   } catch (error) {
