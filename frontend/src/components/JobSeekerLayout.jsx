@@ -60,6 +60,21 @@ const JobSeekerLayout = () => {
       ),
     },
     {
+      id: 'saved-jobs',
+      name: 'Saved Jobs',
+      path: '/saved-jobs',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+          />
+        </svg>
+      ),
+    },
+    {
       id: 'applications',
       name: 'Applications',
       path: '/applications',
@@ -111,6 +126,9 @@ const JobSeekerLayout = () => {
     if (location.pathname === '/applications' || location.pathname.startsWith('/applications/')) {
       return 'applications';
     }
+    if (location.pathname === '/saved-jobs') {
+      return 'saved-jobs';
+    }
     if (location.pathname === '/jobs' || location.pathname.startsWith('/jobs/')) {
       return 'jobs';
     }
@@ -143,6 +161,9 @@ const JobSeekerLayout = () => {
     if (activeTab === 'jobs') {
       return 'Find Your Next Job';
     }
+    if (activeTab === 'saved-jobs') {
+      return 'Saved Jobs';
+    }
     if (activeTab === 'applications') {
       return 'My Applications';
     }
@@ -155,6 +176,9 @@ const JobSeekerLayout = () => {
     }
     if (activeTab === 'jobs') {
       return 'Discover opportunities that match your skills and interests';
+    }
+    if (activeTab === 'saved-jobs') {
+      return 'Jobs you\'ve bookmarked for later review';
     }
     if (activeTab === 'applications') {
       return 'Track the status of your job applications';
