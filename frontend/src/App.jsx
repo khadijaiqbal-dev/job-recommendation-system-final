@@ -21,6 +21,7 @@ import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Jobs from './pages/Jobs';
 import JobDetail from './pages/JobDetail';
+import SavedJobs from './pages/SavedJobs';
 import Profile from './pages/Profile';
 import Applications from './pages/Applications';
 
@@ -105,6 +106,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/jobs" element={<Jobs />} />
               <Route path="/jobs/:id" element={<JobDetail />} />
+              <Route path="/saved-jobs" element={<SavedJobs />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/applications" element={<Applications />} />
               <Route path="/applications/:id" element={<Applications />} />
