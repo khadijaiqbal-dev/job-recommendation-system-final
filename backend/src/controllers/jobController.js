@@ -417,7 +417,10 @@ const applyToJob = async (req, res) => {
 
     // Check if job exists and is active
     const jobResult = await pool.query(
-      "SELECT id, title, company_name FROM job_postings WHERE id = $1 AND is_active = true",
+      `SELECT j.id, j.title, c.name as company_name 
+       FROM job_postings j
+       LEFT JOIN companies c ON j.company_id = c.id
+       WHERE j.id = $1 AND j.is_active = true`,
       [id],
     );
 
@@ -439,9 +442,16 @@ const applyToJob = async (req, res) => {
         .json({ error: "You have already applied for this job" });
     }
 
+    // Validate and normalize resume source
+    const validResourceSources = ["profile", "uploaded"];
+    let finalResumeSource = resumeSource;
+    if (!validResourceSources.includes(resumeSource)) {
+      finalResumeSource = "profile";
+    }
+
     // Get resume URL based on source
     let finalResumeUrl = resumeUrl;
-    if (resumeSource === "profile" && !resumeUrl) {
+    if (finalResumeSource === "profile" && !resumeUrl) {
       // Get resume from user profile
       const profileResult = await pool.query(
         "SELECT resume_url FROM user_profiles WHERE user_id = $1",
@@ -455,7 +465,7 @@ const applyToJob = async (req, res) => {
       `INSERT INTO job_applications (user_id, job_posting_id, status, cover_letter, resume_url, resume_source)
        VALUES ($1, $2, 'APPLIED', $3, $4, $5)
        RETURNING *`,
-      [userId, id, coverLetter || null, finalResumeUrl, resumeSource],
+      [userId, id, coverLetter || null, finalResumeUrl, finalResumeSource],
     );
 
     const application = result.rows[0];

@@ -17,7 +17,7 @@ const getUserApplications = async (req, res) => {
         c.name as company_name
       FROM job_applications ja
       JOIN job_postings j ON ja.job_posting_id = j.id
-      JOIN companies c ON j.company_id = c.id
+      LEFT JOIN companies c ON j.company_id = c.id
       WHERE ja.user_id = $1
       ORDER BY ja.applied_at DESC`,
       [userId],
@@ -68,10 +68,11 @@ const getApplicationById = async (req, res) => {
         j.salary_min,
         j.salary_max,
         j.currency,
-        j.company_name,
-        j.website
+        c.name as company_name,
+        c.website
       FROM job_applications ja
       JOIN job_postings j ON ja.job_posting_id = j.id
+      LEFT JOIN companies c ON j.company_id = c.id
       WHERE ja.id = $1 AND ja.user_id = $2`,
       [id, userId],
     );
@@ -126,12 +127,10 @@ const updateApplicationStatus = async (req, res) => {
       "SELECTED",
     ];
     if (!validStatuses.includes(status)) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Invalid status. Valid statuses: APPLIED, SHORT_LISTED, REJECTED, CALL_FOR_INTERVIEW, SHORT_LISTED_BY_COMPANY, SELECTED",
-        });
+      return res.status(400).json({
+        error:
+          "Invalid status. Valid statuses: APPLIED, SHORT_LISTED, REJECTED, CALL_FOR_INTERVIEW, SHORT_LISTED_BY_COMPANY, SELECTED",
+      });
     }
 
     // Get current application
@@ -242,12 +241,13 @@ const getAllApplications = async (req, res) => {
         j.title as job_title,
         j.location,
         j.job_type,
-        j.company_name,
+        c.name as company_name,
         u.first_name,
         u.last_name,
         u.email
       FROM job_applications ja
       JOIN job_postings j ON ja.job_posting_id = j.id
+      LEFT JOIN companies c ON j.company_id = c.id
       JOIN users u ON ja.user_id = u.id
       WHERE 1=1
     `;
@@ -276,6 +276,7 @@ const getAllApplications = async (req, res) => {
       SELECT COUNT(*) 
       FROM job_applications ja
       JOIN job_postings j ON ja.job_posting_id = j.id
+      LEFT JOIN companies c ON j.company_id = c.id
       JOIN users u ON ja.user_id = u.id
       WHERE 1=1
     `;
