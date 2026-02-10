@@ -12,12 +12,30 @@ const register = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, firstName, lastName } = req.body;
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      // Profile fields from registration form
+      phone,
+      skills,
+      experience,
+      currentJobTitle,
+      currentCompany,
+      expectedSalary,
+      jobType,
+      workLocation,
+      jobCategories,
+      education,
+      university,
+      graduationYear,
+      willingToRelocate,
+      receiveJobAlerts
+    } = req.body;
 
     // Check if user already exists
     const existingUser = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
-    console.log(existingUser, "==existingUser");
-    console.log(email, "==email");
 
     if (existingUser.rows.length > 0) {
       return res.status(400).json({ error: "User already exists" });
@@ -38,6 +56,44 @@ const register = async (req, res) => {
     );
 
     const user = result.rows[0];
+
+    // Parse experience level to years
+    let experienceYears = 0;
+    if (experience) {
+      if (experience.includes('0-2')) experienceYears = 1;
+      else if (experience.includes('3-5')) experienceYears = 4;
+      else if (experience.includes('6-10')) experienceYears = 8;
+      else if (experience.includes('10+')) experienceYears = 12;
+    }
+
+    // Create user profile with all the registration data
+    const profileSkills = Array.isArray(skills) ? skills : [];
+    const preferredJobTypes = jobType ? [jobType] : [];
+    const preferredLocations = workLocation ? [workLocation] : [];
+
+    // Build bio from registration data
+    const bio = currentJobTitle && currentCompany
+      ? `${currentJobTitle} at ${currentCompany}`
+      : currentJobTitle || '';
+
+    await pool.query(
+      `INSERT INTO user_profiles
+       (user_id, bio, skills, experience_years, location, phone,
+        preferred_job_types, preferred_locations, salary_expectation_min, salary_expectation_max)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [
+        user.id,
+        bio,
+        profileSkills,
+        experienceYears,
+        workLocation || null,
+        phone || null,
+        preferredJobTypes,
+        preferredLocations,
+        expectedSalary ? parseInt(expectedSalary) : null,
+        expectedSalary ? parseInt(expectedSalary) * 1.2 : null // 20% buffer for max salary
+      ]
+    );
 
     // Send verification email
     const emailResult = await sendVerificationEmail(email, firstName, verificationCode);

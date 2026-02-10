@@ -224,15 +224,23 @@ const getAIRecommendations = async (req, res) => {
  * Basic fallback recommendations using SQL
  */
 async function getBasicRecommendations(userId) {
+  // Get user profile with all preference data
   const profileResult = await pool.query(
-    'SELECT skills FROM user_profiles WHERE user_id = $1',
+    `SELECT skills, preferred_job_types, preferred_locations,
+            salary_expectation_min, salary_expectation_max
+     FROM user_profiles WHERE user_id = $1`,
     [userId]
   );
 
-  const userSkills = profileResult.rows[0]?.skills || [];
+  const userProfile = profileResult.rows[0] || {};
+  const userSkills = userProfile.skills || [];
+  const preferredTypes = userProfile.preferred_job_types || [];
+  const preferredLocations = userProfile.preferred_locations || [];
+  const salaryMin = userProfile.salary_expectation_min;
+  const salaryMax = userProfile.salary_expectation_max;
 
-  if (userSkills.length === 0) {
-    // Return recent jobs if no skills
+  if (userSkills.length === 0 && preferredTypes.length === 0 && preferredLocations.length === 0) {
+    // Return recent jobs if no profile data at all
     const recentResult = await pool.query(
       `SELECT id, title, description, company_name, location, job_type,
               experience_level, salary_min, salary_max, currency, skills_required
@@ -260,7 +268,7 @@ async function getBasicRecommendations(userId) {
     }));
   }
 
-  // Match jobs based on skills overlap
+  // Match jobs based on skills overlap and preferences
   const jobsResult = await pool.query(
     `SELECT id, title, description, company_name, location, job_type,
             experience_level, salary_min, salary_max, currency, skills_required
@@ -270,12 +278,45 @@ async function getBasicRecommendations(userId) {
 
   const scoredJobs = jobsResult.rows
     .map(job => {
-      const jobSkills = (job.skills_required || []).map(s => s.toLowerCase());
-      const userSkillsLower = userSkills.map(s => s.toLowerCase());
-      const matchingSkills = userSkillsLower.filter(s => jobSkills.includes(s));
-      const matchScore = jobSkills.length > 0
-        ? Math.round((matchingSkills.length / jobSkills.length) * 100)
-        : 0;
+      let score = 0;
+      const matchingSkills = [];
+
+      // Skills matching (50% weight)
+      if (userSkills.length > 0) {
+        const jobSkills = (job.skills_required || []).map(s => s.toLowerCase());
+        const userSkillsLower = userSkills.map(s => s.toLowerCase());
+        const matches = userSkillsLower.filter(s => jobSkills.includes(s));
+        matchingSkills.push(...matches);
+        const skillScore = jobSkills.length > 0
+          ? (matches.length / jobSkills.length) * 50
+          : 0;
+        score += skillScore;
+      }
+
+      // Job type matching (20% weight)
+      if (preferredTypes.length > 0 && job.job_type) {
+        const jobTypeLower = job.job_type.toLowerCase().replace(/_/g, ' ');
+        const typeMatch = preferredTypes.some(t =>
+          t.toLowerCase().includes(jobTypeLower) || jobTypeLower.includes(t.toLowerCase())
+        );
+        if (typeMatch) score += 20;
+      }
+
+      // Location matching (15% weight)
+      if (preferredLocations.length > 0 && job.location) {
+        const locationLower = job.location.toLowerCase();
+        const locationMatch = preferredLocations.some(l =>
+          locationLower.includes(l.toLowerCase()) || l.toLowerCase().includes(locationLower)
+        );
+        if (locationMatch) score += 15;
+      }
+
+      // Salary matching (15% weight)
+      if (salaryMin && job.salary_max && job.salary_max >= salaryMin) {
+        score += 15;
+      } else if (salaryMax && job.salary_min && job.salary_min <= salaryMax) {
+        score += 10;
+      }
 
       return {
         id: job.id,
@@ -290,13 +331,33 @@ async function getBasicRecommendations(userId) {
         salaryMax: job.salary_max,
         currency: job.currency,
         skillsRequired: job.skills_required || [],
-        matchScore,
+        matchScore: Math.round(score),
         matchingSkills
       };
     })
-    .filter(job => job.matchScore > 20)
+    .filter(job => job.matchScore > 15)
     .sort((a, b) => b.matchScore - a.matchScore)
     .slice(0, 20);
+
+  // If no matching jobs found, return recent jobs
+  if (scoredJobs.length === 0) {
+    return jobsResult.rows.slice(0, 20).map(job => ({
+      id: job.id,
+      title: job.title,
+      description: job.description,
+      company: job.company_name,
+      companyName: job.company_name,
+      location: job.location,
+      jobType: job.job_type,
+      experienceLevel: job.experience_level,
+      salaryMin: job.salary_min,
+      salaryMax: job.salary_max,
+      currency: job.currency,
+      skillsRequired: job.skills_required || [],
+      matchScore: 40,
+      matchingSkills: []
+    }));
+  }
 
   return scoredJobs;
 }

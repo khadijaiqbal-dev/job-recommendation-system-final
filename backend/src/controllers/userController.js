@@ -4,7 +4,7 @@ const pool = require("../config/database");
 const getUserProfile = async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT u.id, u.email, u.first_name, u.last_name, u.is_verified, u.created_at, up.* FROM users u LEFT JOIN user_profiles up ON u.id = up.user_id WHERE u.id = $1",
+      "SELECT u.id, u.email, u.first_name, u.last_name, u.role, u.is_verified, u.created_at, up.* FROM users u LEFT JOIN user_profiles up ON u.id = up.user_id WHERE u.id = $1",
       [req.user.id]
     );
 
@@ -18,12 +18,21 @@ const getUserProfile = async (req, res) => {
       email: user.email,
       firstName: user.first_name,
       lastName: user.last_name,
+      role: user.role,
+      isVerified: user.is_verified,
       phone: user.phone || "",
       location: user.location || "",
       bio: user.bio || "",
       skills: user.skills || [],
-      experience: [],
-      education: [],
+      experienceYears: user.experience_years || 0,
+      linkedinUrl: user.linkedin_url || "",
+      githubUrl: user.github_url || "",
+      resumeUrl: user.resume_url || "",
+      preferredJobTypes: user.preferred_job_types || [],
+      preferredLocations: user.preferred_locations || [],
+      salaryExpectationMin: user.salary_expectation_min || null,
+      salaryExpectationMax: user.salary_expectation_max || null,
+      createdAt: user.created_at,
     });
   } catch (error) {
     console.error("Get user profile error:", error);
