@@ -70,9 +70,20 @@ const Register = () => {
     "Other",
   ];
 
-  const experienceLevels = ["Entry Level (0-2 years)", "Mid Level (3-5 years)", "Senior Level (6-10 years)", "Executive Level (10+ years)"];
+  const experienceLevels = [
+    "Entry Level (0-2 years)",
+    "Mid Level (3-5 years)",
+    "Senior Level (6-10 years)",
+    "Executive Level (10+ years)",
+  ];
 
-  const jobTypes = ["Full-time", "Part-time", "Contract", "Freelance", "Internship"];
+  const jobTypes = [
+    "Full-time",
+    "Part-time",
+    "Contract",
+    "Freelance",
+    "Internship",
+  ];
   const workLocations = ["Remote", "Hybrid", "On-site", "Flexible"];
 
   // Fetch available skills from database
@@ -121,11 +132,21 @@ const Register = () => {
 
     // Filter skills based on input
     if (value.trim()) {
-      const filtered = availableSkills.filter((skill) => skill.name.toLowerCase().includes(value.toLowerCase()) && !formData.skills.includes(skill.name)).slice(0, 10);
+      const filtered = availableSkills
+        .filter(
+          (skill) =>
+            skill.name.toLowerCase().includes(value.toLowerCase()) &&
+            !formData.skills.includes(skill.name),
+        )
+        .slice(0, 10);
       setFilteredSkills(filtered);
       setShowSkillDropdown(true);
     } else {
-      setFilteredSkills(availableSkills.filter((skill) => !formData.skills.includes(skill.name)).slice(0, 10));
+      setFilteredSkills(
+        availableSkills
+          .filter((skill) => !formData.skills.includes(skill.name))
+          .slice(0, 10),
+      );
       setShowSkillDropdown(true);
     }
   };
@@ -156,7 +177,9 @@ const Register = () => {
   };
 
   const handleCategoryToggle = (category) => {
-    const newCategories = formData.jobCategories.includes(category) ? formData.jobCategories.filter((cat) => cat !== category) : [...formData.jobCategories, category];
+    const newCategories = formData.jobCategories.includes(category)
+      ? formData.jobCategories.filter((cat) => cat !== category)
+      : [...formData.jobCategories, category];
 
     setFormData({
       ...formData,
@@ -176,7 +199,11 @@ const Register = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.type === "application/pdf" || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    if (
+      file.type === "application/pdf" ||
+      file.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) {
       setResumeFile(file);
       setParseError("");
 
@@ -204,10 +231,10 @@ const Register = () => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('resume', resumeFile);
+      formDataToSend.append("resume", resumeFile);
 
-      const response = await fetch('/api/resume/parse', {
-        method: 'POST',
+      const response = await fetch("/api/resume/parse", {
+        method: "POST",
         body: formDataToSend,
       });
 
@@ -217,26 +244,35 @@ const Register = () => {
         // Pre-fill form with parsed data
         const parsedData = data.data;
 
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           currentJobTitle: parsedData.currentJobTitle || prev.currentJobTitle,
           experience: parsedData.experience || prev.experience,
           currentCompany: parsedData.currentCompany || prev.currentCompany,
           expectedSalary: parsedData.expectedSalary || prev.expectedSalary,
-          skills: parsedData.skills?.length > 0 ? parsedData.skills : prev.skills,
+          skills:
+            parsedData.skills?.length > 0 ? parsedData.skills : prev.skills,
           education: parsedData.education || prev.education,
           university: parsedData.university || prev.university,
           graduationYear: parsedData.graduationYear || prev.graduationYear,
-          jobCategories: parsedData.jobCategories?.length > 0 ? parsedData.jobCategories : prev.jobCategories,
+          jobCategories:
+            parsedData.jobCategories?.length > 0
+              ? parsedData.jobCategories
+              : prev.jobCategories,
         }));
 
         setResumeParsed(true);
       } else {
-        setParseError(data.error || 'Failed to parse resume. You can still fill the form manually.');
+        setParseError(
+          data.error ||
+            "Failed to parse resume. You can still fill the form manually.",
+        );
       }
     } catch (err) {
-      console.error('Resume parsing error:', err);
-      setParseError('Failed to parse resume. You can still fill the form manually.');
+      console.error("Resume parsing error:", err);
+      setParseError(
+        "Failed to parse resume. You can still fill the form manually.",
+      );
     } finally {
       setIsParsingResume(false);
     }
@@ -282,7 +318,10 @@ const Register = () => {
         break;
 
       case 3:
-        if (!formData.currentJobTitle || formData.currentJobTitle.trim() === "") {
+        if (
+          !formData.currentJobTitle ||
+          formData.currentJobTitle.trim() === ""
+        ) {
           errors.currentJobTitle = "Current job title is required";
           isValid = false;
         }
@@ -298,7 +337,10 @@ const Register = () => {
           errors.currentCompany = "Current company is required";
           isValid = false;
         }
-        if (!formData.expectedSalary || formData.expectedSalary.toString().trim() === "") {
+        if (
+          !formData.expectedSalary ||
+          formData.expectedSalary.toString().trim() === ""
+        ) {
           errors.expectedSalary = "Expected salary is required";
           isValid = false;
         }
@@ -325,16 +367,11 @@ const Register = () => {
           errors.university = "University/Institution is required";
           isValid = false;
         }
-        if (!formData.graduationYear || formData.graduationYear.toString().trim() === "") {
+        if (
+          !formData.graduationYear ||
+          formData.graduationYear.toString().trim() === ""
+        ) {
           errors.graduationYear = "Graduation year is required";
-          isValid = false;
-        }
-        if (formData.willingToRelocate === false) {
-          errors.willingToRelocate = "You must confirm your willingness to relocate";
-          isValid = false;
-        }
-        if (formData.receiveJobAlerts === false) {
-          errors.receiveJobAlerts = "You must agree to receive job alerts";
           isValid = false;
         }
         break;
@@ -346,11 +383,19 @@ const Register = () => {
         } else if (formData.password.length < 8) {
           errors.password = "Password must be at least 8 characters long";
           isValid = false;
-        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(formData.password)) {
-          errors.password = "Password must contain uppercase, lowercase, number, and special character";
+        } else if (
+          !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(
+            formData.password,
+          )
+        ) {
+          errors.password =
+            "Password must contain uppercase, lowercase, number, and special character";
           isValid = false;
         }
-        if (!formData.confirmPassword || formData.confirmPassword.trim() === "") {
+        if (
+          !formData.confirmPassword ||
+          formData.confirmPassword.trim() === ""
+        ) {
           errors.confirmPassword = "Please confirm your password";
           isValid = false;
         } else if (formData.password !== formData.confirmPassword) {
@@ -375,7 +420,10 @@ const Register = () => {
     } else {
       const errorMessages = Object.values(fieldErrors);
       if (errorMessages.length > 0) {
-        setError(errorMessages[0] || "Please fill in all required fields before proceeding.");
+        setError(
+          errorMessages[0] ||
+            "Please fill in all required fields before proceeding.",
+        );
       } else {
         setError("Please fill in all required fields before proceeding.");
       }
@@ -434,12 +482,18 @@ const Register = () => {
         <div key={index} className="flex items-center">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              index + 1 <= currentStep ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-500"
+              index + 1 <= currentStep
+                ? "bg-indigo-500 text-white"
+                : "bg-gray-200 text-gray-500"
             }`}
           >
             {index + 1}
           </div>
-          {index < totalSteps - 1 && <div className={`w-12 h-1 mx-1 ${index + 1 < currentStep ? "bg-indigo-500" : "bg-gray-200"}`} />}
+          {index < totalSteps - 1 && (
+            <div
+              className={`w-12 h-1 mx-1 ${index + 1 < currentStep ? "bg-indigo-500" : "bg-gray-200"}`}
+            />
+          )}
         </div>
       ))}
     </div>
@@ -448,98 +502,136 @@ const Register = () => {
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Personal Information</h2>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          Personal Information
+        </h2>
         <p className="text-gray-600 text-sm mt-2">Tell us about yourself</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">First Name*</label>
+          <label className="block text-sm font-medium text-gray-700">
+            First Name*
+          </label>
           <input
             name="firstName"
             type="text"
             required
             className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.firstName ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.firstName
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             placeholder="First name"
             value={formData.firstName}
             onChange={handleChange}
           />
-          {fieldErrors.firstName && <p className="text-xs text-red-600 mt-1">{fieldErrors.firstName}</p>}
+          {fieldErrors.firstName && (
+            <p className="text-xs text-red-600 mt-1">{fieldErrors.firstName}</p>
+          )}
         </div>
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Last Name*</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Last Name*
+          </label>
           <input
             name="lastName"
             type="text"
             required
             className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.lastName ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.lastName
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             placeholder="Last name"
             value={formData.lastName}
             onChange={handleChange}
           />
-          {fieldErrors.lastName && <p className="text-xs text-red-600 mt-1">{fieldErrors.lastName}</p>}
+          {fieldErrors.lastName && (
+            <p className="text-xs text-red-600 mt-1">{fieldErrors.lastName}</p>
+          )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Email Address*</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Email Address*
+        </label>
         <input
           name="email"
           type="email"
           required
           className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-            fieldErrors.email ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+            fieldErrors.email
+              ? "border-red-300 focus:ring-red-500"
+              : "border-gray-200"
           }`}
           placeholder="your.email@example.com"
           value={formData.email}
           onChange={handleChange}
         />
-        {fieldErrors.email && <p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>}
+        {fieldErrors.email && (
+          <p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Phone Number*</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Phone Number*
+          </label>
           <input
             name="phone"
             type="tel"
             required
             className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.phone ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.phone
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             placeholder="+1 (555) 123-4567"
             value={formData.phone}
             onChange={handleChange}
           />
-          {fieldErrors.phone && <p className="text-xs text-red-600 mt-1">{fieldErrors.phone}</p>}
+          {fieldErrors.phone && (
+            <p className="text-xs text-red-600 mt-1">{fieldErrors.phone}</p>
+          )}
         </div>
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Date of Birth*</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Date of Birth*
+          </label>
           <input
             name="dateOfBirth"
             type="date"
             required
             className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.dateOfBirth ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.dateOfBirth
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             value={formData.dateOfBirth}
             onChange={handleChange}
           />
-          {fieldErrors.dateOfBirth && <p className="text-xs text-red-600 mt-1">{fieldErrors.dateOfBirth}</p>}
+          {fieldErrors.dateOfBirth && (
+            <p className="text-xs text-red-600 mt-1">
+              {fieldErrors.dateOfBirth}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Gender*</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Gender*
+        </label>
         <select
           name="gender"
           required
           className={`block w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-            fieldErrors.gender ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+            fieldErrors.gender
+              ? "border-red-300 focus:ring-red-500"
+              : "border-gray-200"
           }`}
           value={formData.gender}
           onChange={handleChange}
@@ -550,7 +642,9 @@ const Register = () => {
           <option value="other">Other</option>
           <option value="prefer-not-to-say">Prefer not to say</option>
         </select>
-        {fieldErrors.gender && <p className="text-xs text-red-600 mt-1">{fieldErrors.gender}</p>}
+        {fieldErrors.gender && (
+          <p className="text-xs text-red-600 mt-1">{fieldErrors.gender}</p>
+        )}
       </div>
     </div>
   );
@@ -558,28 +652,48 @@ const Register = () => {
   const renderStep2 = () => (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Upload Your Resume</h2>
-        <p className="text-gray-600 text-sm mt-2">Upload your CV to auto-fill your profile (optional)</p>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          Upload Your Resume
+        </h2>
+        <p className="text-gray-600 text-sm mt-2">
+          Upload your CV to auto-fill your profile (optional)
+        </p>
       </div>
 
       <div className="bg-indigo-50/80 backdrop-blur-sm border border-indigo-200 rounded-xl p-4 mb-6">
         <div className="flex items-start">
-          <svg className="w-5 h-5 text-indigo-500 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          <svg
+            className="w-5 h-5 text-indigo-500 mt-0.5 mr-3 flex-shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clipRule="evenodd"
+            />
           </svg>
           <div>
-            <h4 className="text-sm font-medium text-indigo-800">Save time with resume parsing</h4>
+            <h4 className="text-sm font-medium text-indigo-800">
+              Save time with resume parsing
+            </h4>
             <p className="text-xs text-indigo-700 mt-1">
-              Upload your resume and we'll automatically extract your professional information, skills, and education to pre-fill the form. You can review and edit all information before submitting.
+              Upload your resume and we'll automatically extract your
+              professional information, skills, and education to pre-fill the
+              form. You can review and edit all information before submitting.
             </p>
           </div>
         </div>
       </div>
 
       <div className="space-y-4">
-        <div className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
-          resumeFile ? "border-green-400 bg-green-50/50" : "border-gray-300 hover:border-indigo-400"
-        }`}>
+        <div
+          className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+            resumeFile
+              ? "border-green-400 bg-green-50/50"
+              : "border-gray-300 hover:border-indigo-400"
+          }`}
+        >
           <input
             type="file"
             accept=".pdf,.doc,.docx"
@@ -587,24 +701,55 @@ const Register = () => {
             className="hidden"
             id="resume-upload"
           />
-          <label htmlFor="resume-upload" className="cursor-pointer flex flex-col items-center">
+          <label
+            htmlFor="resume-upload"
+            className="cursor-pointer flex flex-col items-center"
+          >
             {resumeFile ? (
               <>
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
-                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-8 h-8 text-green-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
-                <span className="text-sm font-medium text-gray-900">{resumeFile.name}</span>
-                <span className="text-xs text-gray-500 mt-1">Click to change file</span>
+                <span className="text-sm font-medium text-gray-900">
+                  {resumeFile.name}
+                </span>
+                <span className="text-xs text-gray-500 mt-1">
+                  Click to change file
+                </span>
               </>
             ) : (
               <>
-                <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                <svg
+                  className="w-12 h-12 text-gray-400 mb-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
                 </svg>
-                <span className="text-sm text-gray-600">Click to upload your resume</span>
-                <span className="text-xs text-gray-400 mt-1">PDF or DOCX (max 10MB)</span>
+                <span className="text-sm text-gray-600">
+                  Click to upload your resume
+                </span>
+                <span className="text-xs text-gray-400 mt-1">
+                  PDF or DOCX (max 10MB)
+                </span>
               </>
             )}
           </label>
@@ -619,8 +764,19 @@ const Register = () => {
           >
             {isParsingResume ? (
               <div className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
                   <path
                     className="opacity-75"
                     fill="currentColor"
@@ -631,8 +787,18 @@ const Register = () => {
               </div>
             ) : (
               <div className="flex items-center justify-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                  />
                 </svg>
                 Parse Resume & Auto-fill Form
               </div>
@@ -643,12 +809,25 @@ const Register = () => {
         {resumeParsed && (
           <div className="bg-green-50/80 backdrop-blur-sm border border-green-200 rounded-xl p-4">
             <div className="flex items-center">
-              <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              <svg
+                className="w-5 h-5 text-green-500 mr-3"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
               </svg>
               <div>
-                <h4 className="text-sm font-medium text-green-800">Resume parsed successfully!</h4>
-                <p className="text-xs text-green-700 mt-0.5">Your information has been pre-filled. Review and edit as needed.</p>
+                <h4 className="text-sm font-medium text-green-800">
+                  Resume parsed successfully!
+                </h4>
+                <p className="text-xs text-green-700 mt-0.5">
+                  Your information has been pre-filled. Review and edit as
+                  needed.
+                </p>
               </div>
             </div>
           </div>
@@ -657,11 +836,21 @@ const Register = () => {
         {parseError && (
           <div className="bg-yellow-50/80 backdrop-blur-sm border border-yellow-200 rounded-xl p-4">
             <div className="flex items-start">
-              <svg className="w-5 h-5 text-yellow-500 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              <svg
+                className="w-5 h-5 text-yellow-500 mt-0.5 mr-3"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
               <div>
-                <h4 className="text-sm font-medium text-yellow-800">Couldn't parse resume</h4>
+                <h4 className="text-sm font-medium text-yellow-800">
+                  Couldn't parse resume
+                </h4>
                 <p className="text-xs text-yellow-700 mt-0.5">{parseError}</p>
               </div>
             </div>
@@ -687,47 +876,72 @@ const Register = () => {
   const renderStep3 = () => (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Professional Information</h2>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          Professional Information
+        </h2>
         <p className="text-gray-600 text-sm mt-2">
-          {resumeParsed ? "Review and edit your professional details" : "Your work experience and preferences"}
+          {resumeParsed
+            ? "Review and edit your professional details"
+            : "Your work experience and preferences"}
         </p>
       </div>
 
       {resumeParsed && (
         <div className="bg-blue-50/80 backdrop-blur-sm border border-blue-200 rounded-xl p-3 mb-4">
           <p className="text-xs text-blue-700 flex items-center">
-            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clipRule="evenodd"
+              />
             </svg>
-            Fields below were pre-filled from your resume. Please review and update as needed.
+            Fields below were pre-filled from your resume. Please review and
+            update as needed.
           </p>
         </div>
       )}
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Current Job Title*</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Current Job Title*
+        </label>
         <input
           name="currentJobTitle"
           type="text"
           required
           className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-            fieldErrors.currentJobTitle ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+            fieldErrors.currentJobTitle
+              ? "border-red-300 focus:ring-red-500"
+              : "border-gray-200"
           }`}
           placeholder="e.g., Software Engineer, Marketing Manager"
           value={formData.currentJobTitle}
           onChange={handleChange}
         />
-        {fieldErrors.currentJobTitle && <p className="text-xs text-red-600 mt-1">{fieldErrors.currentJobTitle}</p>}
+        {fieldErrors.currentJobTitle && (
+          <p className="text-xs text-red-600 mt-1">
+            {fieldErrors.currentJobTitle}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Experience Level*</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Experience Level*
+          </label>
           <select
             name="experience"
             required
             className={`block w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.experience ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.experience
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             value={formData.experience}
             onChange={handleChange}
@@ -739,15 +953,23 @@ const Register = () => {
               </option>
             ))}
           </select>
-          {fieldErrors.experience && <p className="text-xs text-red-600 mt-1">{fieldErrors.experience}</p>}
+          {fieldErrors.experience && (
+            <p className="text-xs text-red-600 mt-1">
+              {fieldErrors.experience}
+            </p>
+          )}
         </div>
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Job Type*</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Job Type*
+          </label>
           <select
             name="jobType"
             required
             className={`block w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.jobType ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.jobType
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             value={formData.jobType}
             onChange={handleChange}
@@ -759,49 +981,71 @@ const Register = () => {
               </option>
             ))}
           </select>
-          {fieldErrors.jobType && <p className="text-xs text-red-600 mt-1">{fieldErrors.jobType}</p>}
+          {fieldErrors.jobType && (
+            <p className="text-xs text-red-600 mt-1">{fieldErrors.jobType}</p>
+          )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Current Company*</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Current Company*
+        </label>
         <input
           name="currentCompany"
           type="text"
           required
           className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-            fieldErrors.currentCompany ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+            fieldErrors.currentCompany
+              ? "border-red-300 focus:ring-red-500"
+              : "border-gray-200"
           }`}
           placeholder="Company name"
           value={formData.currentCompany}
           onChange={handleChange}
         />
-        {fieldErrors.currentCompany && <p className="text-xs text-red-600 mt-1">{fieldErrors.currentCompany}</p>}
+        {fieldErrors.currentCompany && (
+          <p className="text-xs text-red-600 mt-1">
+            {fieldErrors.currentCompany}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Expected Salary (USD)*</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Expected Salary (USD)*
+          </label>
           <input
             name="expectedSalary"
             type="number"
             required
             className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.expectedSalary ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.expectedSalary
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             placeholder="e.g., 75000"
             value={formData.expectedSalary}
             onChange={handleChange}
           />
-          {fieldErrors.expectedSalary && <p className="text-xs text-red-600 mt-1">{fieldErrors.expectedSalary}</p>}
+          {fieldErrors.expectedSalary && (
+            <p className="text-xs text-red-600 mt-1">
+              {fieldErrors.expectedSalary}
+            </p>
+          )}
         </div>
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Work Location Preference*</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Work Location Preference*
+          </label>
           <select
             name="workLocation"
             required
             className={`block w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.workLocation ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.workLocation
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             value={formData.workLocation}
             onChange={handleChange}
@@ -813,15 +1057,24 @@ const Register = () => {
               </option>
             ))}
           </select>
-          {fieldErrors.workLocation && <p className="text-xs text-red-600 mt-1">{fieldErrors.workLocation}</p>}
+          {fieldErrors.workLocation && (
+            <p className="text-xs text-red-600 mt-1">
+              {fieldErrors.workLocation}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="space-y-4">
-        <label className="block text-sm font-medium text-gray-700">Job Categories of Interest*</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Job Categories of Interest*
+        </label>
         <div className="grid grid-cols-2 gap-2">
           {jobCategories.map((category) => (
-            <label key={category} className="flex items-center space-x-2 cursor-pointer">
+            <label
+              key={category}
+              className="flex items-center space-x-2 cursor-pointer"
+            >
               <input
                 type="checkbox"
                 checked={formData.jobCategories.includes(category)}
@@ -832,7 +1085,11 @@ const Register = () => {
             </label>
           ))}
         </div>
-        {fieldErrors.jobCategories && <p className="text-xs text-red-600 mt-1">{fieldErrors.jobCategories}</p>}
+        {fieldErrors.jobCategories && (
+          <p className="text-xs text-red-600 mt-1">
+            {fieldErrors.jobCategories}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -840,38 +1097,59 @@ const Register = () => {
   const renderStep4 = () => (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Skills & Education</h2>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          Skills & Education
+        </h2>
         <p className="text-gray-600 text-sm mt-2">
-          {resumeParsed ? "Review and edit your skills and education" : "Showcase your expertise"}
+          {resumeParsed
+            ? "Review and edit your skills and education"
+            : "Showcase your expertise"}
         </p>
       </div>
 
       {resumeParsed && (
         <div className="bg-blue-50/80 backdrop-blur-sm border border-blue-200 rounded-xl p-3 mb-4">
           <p className="text-xs text-blue-700 flex items-center">
-            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clipRule="evenodd"
+              />
             </svg>
-            Fields below were pre-filled from your resume. Please review and update as needed.
+            Fields below were pre-filled from your resume. Please review and
+            update as needed.
           </p>
         </div>
       )}
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Skills*</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Skills*
+        </label>
         <div className="space-y-3 relative">
           <div className="relative">
             <input
               type="text"
               placeholder="Search and select skills from the list"
               className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-                fieldErrors.skills ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+                fieldErrors.skills
+                  ? "border-red-300 focus:ring-red-500"
+                  : "border-gray-200"
               }`}
               value={skillInput}
               onChange={handleSkillInputChange}
               onFocus={() => {
                 if (availableSkills.length > 0) {
-                  setFilteredSkills(availableSkills.filter((skill) => !formData.skills.includes(skill.name)).slice(0, 10));
+                  setFilteredSkills(
+                    availableSkills
+                      .filter((skill) => !formData.skills.includes(skill.name))
+                      .slice(0, 10),
+                  );
                   setShowSkillDropdown(true);
                 }
               }}
@@ -894,18 +1172,27 @@ const Register = () => {
                 ))}
               </div>
             )}
-            {showSkillDropdown && filteredSkills.length === 0 && skillInput.trim() && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg p-4 text-sm text-gray-500">
-                No matching skills found. Please select from existing skills.
-              </div>
-            )}
+            {showSkillDropdown &&
+              filteredSkills.length === 0 &&
+              skillInput.trim() && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg p-4 text-sm text-gray-500">
+                  No matching skills found. Please select from existing skills.
+                </div>
+              )}
           </div>
           {formData.skills.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {formData.skills.map((skill, index) => (
-                <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800 font-medium">
+                <span
+                  key={index}
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800 font-medium"
+                >
                   {skill}
-                  <button type="button" onClick={() => handleSkillRemove(skill)} className="ml-2 text-indigo-600 hover:text-indigo-800 font-bold">
+                  <button
+                    type="button"
+                    onClick={() => handleSkillRemove(skill)}
+                    className="ml-2 text-indigo-600 hover:text-indigo-800 font-bold"
+                  >
                     ×
                   </button>
                 </span>
@@ -914,21 +1201,28 @@ const Register = () => {
           )}
           {availableSkills.length > 0 && (
             <p className="text-xs text-gray-500">
-              {formData.skills.length} skill(s) selected. Select from {availableSkills.length} available skills.
+              {formData.skills.length} skill(s) selected. Select from{" "}
+              {availableSkills.length} available skills.
             </p>
           )}
-          {fieldErrors.skills && <p className="text-xs text-red-600 mt-1">{fieldErrors.skills}</p>}
+          {fieldErrors.skills && (
+            <p className="text-xs text-red-600 mt-1">{fieldErrors.skills}</p>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Education Level*</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Education Level*
+          </label>
           <select
             name="education"
             required
             className={`block w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.education ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.education
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             value={formData.education}
             onChange={handleChange}
@@ -941,10 +1235,14 @@ const Register = () => {
             <option value="phd">PhD</option>
             <option value="other">Other</option>
           </select>
-          {fieldErrors.education && <p className="text-xs text-red-600 mt-1">{fieldErrors.education}</p>}
+          {fieldErrors.education && (
+            <p className="text-xs text-red-600 mt-1">{fieldErrors.education}</p>
+          )}
         </div>
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Graduation Year*</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Graduation Year*
+          </label>
           <input
             name="graduationYear"
             type="number"
@@ -952,30 +1250,42 @@ const Register = () => {
             min="1950"
             max="2030"
             className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.graduationYear ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.graduationYear
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             placeholder="2020"
             value={formData.graduationYear}
             onChange={handleChange}
           />
-          {fieldErrors.graduationYear && <p className="text-xs text-red-600 mt-1">{fieldErrors.graduationYear}</p>}
+          {fieldErrors.graduationYear && (
+            <p className="text-xs text-red-600 mt-1">
+              {fieldErrors.graduationYear}
+            </p>
+          )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">University/Institution*</label>
+        <label className="block text-sm font-medium text-gray-700">
+          University/Institution*
+        </label>
         <input
           name="university"
           type="text"
           required
           className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-            fieldErrors.university ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+            fieldErrors.university
+              ? "border-red-300 focus:ring-red-500"
+              : "border-gray-200"
           }`}
           placeholder="University name"
           value={formData.university}
           onChange={handleChange}
         />
-        {fieldErrors.university && <p className="text-xs text-red-600 mt-1">{fieldErrors.university}</p>}
+        {fieldErrors.university && (
+          <p className="text-xs text-red-600 mt-1">{fieldErrors.university}</p>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -989,8 +1299,14 @@ const Register = () => {
             className={`mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 ${fieldErrors.willingToRelocate ? "border-red-300" : ""}`}
           />
           <div className="flex-1">
-            <label className="text-sm font-medium text-gray-700">Willing to relocate for the right opportunity*</label>
-            {fieldErrors.willingToRelocate && <p className="text-xs text-red-600 mt-1">{fieldErrors.willingToRelocate}</p>}
+            <label className="text-sm font-medium text-gray-700">
+              Willing to relocate for the right opportunity*
+            </label>
+            {fieldErrors.willingToRelocate && (
+              <p className="text-xs text-red-600 mt-1">
+                {fieldErrors.willingToRelocate}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-start space-x-2">
@@ -1003,8 +1319,14 @@ const Register = () => {
             className={`mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 ${fieldErrors.receiveJobAlerts ? "border-red-300" : ""}`}
           />
           <div className="flex-1">
-            <label className="text-sm font-medium text-gray-700">Receive job alerts and recommendations*</label>
-            {fieldErrors.receiveJobAlerts && <p className="text-xs text-red-600 mt-1">{fieldErrors.receiveJobAlerts}</p>}
+            <label className="text-sm font-medium text-gray-700">
+              Receive job alerts and recommendations*
+            </label>
+            {fieldErrors.receiveJobAlerts && (
+              <p className="text-xs text-red-600 mt-1">
+                {fieldErrors.receiveJobAlerts}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -1014,19 +1336,27 @@ const Register = () => {
   const renderStep5 = () => (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Account Security</h2>
-        <p className="text-gray-600 text-sm mt-2">Create your secure password</p>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          Account Security
+        </h2>
+        <p className="text-gray-600 text-sm mt-2">
+          Create your secure password
+        </p>
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Password*</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Password*
+        </label>
         <div className="relative">
           <input
             name="password"
             type={showPassword ? "text" : "password"}
             required
             className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.password ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.password
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             placeholder="Create a strong password"
             value={formData.password}
@@ -1038,7 +1368,12 @@ const Register = () => {
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -1047,8 +1382,18 @@ const Register = () => {
                 />
               </svg>
             ) : (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -1059,18 +1404,24 @@ const Register = () => {
             )}
           </button>
         </div>
-        {fieldErrors.password && <p className="text-xs text-red-600 mt-1">{fieldErrors.password}</p>}
+        {fieldErrors.password && (
+          <p className="text-xs text-red-600 mt-1">{fieldErrors.password}</p>
+        )}
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Confirm Password*</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Confirm Password*
+        </label>
         <div className="relative">
           <input
             name="confirmPassword"
             type={showConfirmPassword ? "text" : "password"}
             required
             className={`block w-full px-4 py-3 border rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm ${
-              fieldErrors.confirmPassword ? "border-red-300 focus:ring-red-500" : "border-gray-200"
+              fieldErrors.confirmPassword
+                ? "border-red-300 focus:ring-red-500"
+                : "border-gray-200"
             }`}
             placeholder="Confirm your password"
             value={formData.confirmPassword}
@@ -1082,7 +1433,12 @@ const Register = () => {
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
           >
             {showConfirmPassword ? (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -1091,8 +1447,18 @@ const Register = () => {
                 />
               </svg>
             ) : (
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -1103,23 +1469,43 @@ const Register = () => {
             )}
           </button>
         </div>
-        {fieldErrors.confirmPassword && <p className="text-xs text-red-600 mt-1">{fieldErrors.confirmPassword}</p>}
+        {fieldErrors.confirmPassword && (
+          <p className="text-xs text-red-600 mt-1">
+            {fieldErrors.confirmPassword}
+          </p>
+        )}
       </div>
 
       <div className="bg-blue-50/80 backdrop-blur-sm border border-blue-200 rounded-xl p-4">
-        <h4 className="text-sm font-medium text-blue-800 mb-2">Password Requirements:</h4>
+        <h4 className="text-sm font-medium text-blue-800 mb-2">
+          Password Requirements:
+        </h4>
         <ul className="text-xs text-blue-700 space-y-1">
           <li className={formData.password.length >= 8 ? "text-green-600" : ""}>
-            {formData.password.length >= 8 ? "✓" : "•"} At least 8 characters long
+            {formData.password.length >= 8 ? "✓" : "•"} At least 8 characters
+            long
           </li>
-          <li className={/(?=.*[a-z])(?=.*[A-Z])/.test(formData.password) ? "text-green-600" : ""}>
-            {/(?=.*[a-z])(?=.*[A-Z])/.test(formData.password) ? "✓" : "•"} Contains uppercase and lowercase letters
+          <li
+            className={
+              /(?=.*[a-z])(?=.*[A-Z])/.test(formData.password)
+                ? "text-green-600"
+                : ""
+            }
+          >
+            {/(?=.*[a-z])(?=.*[A-Z])/.test(formData.password) ? "✓" : "•"}{" "}
+            Contains uppercase and lowercase letters
           </li>
           <li className={/\d/.test(formData.password) ? "text-green-600" : ""}>
-            {/\d/.test(formData.password) ? "✓" : "•"} Contains at least one number
+            {/\d/.test(formData.password) ? "✓" : "•"} Contains at least one
+            number
           </li>
-          <li className={/[@$!%*?&]/.test(formData.password) ? "text-green-600" : ""}>
-            {/[@$!%*?&]/.test(formData.password) ? "✓" : "•"} Contains at least one special character (@$!%*?&)
+          <li
+            className={
+              /[@$!%*?&]/.test(formData.password) ? "text-green-600" : ""
+            }
+          >
+            {/[@$!%*?&]/.test(formData.password) ? "✓" : "•"} Contains at least
+            one special character (@$!%*?&)
           </li>
         </ul>
       </div>
@@ -1154,7 +1540,11 @@ const Register = () => {
 
             <form onSubmit={handleSubmit}>
               {/* Error Messages */}
-              {error && <div className="bg-red-50/80 backdrop-blur-sm border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-lg mb-6">{error}</div>}
+              {error && (
+                <div className="bg-red-50/80 backdrop-blur-sm border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-lg mb-6">
+                  {error}
+                </div>
+              )}
 
               {/* Current Step Content */}
               {renderCurrentStep()}
@@ -1186,8 +1576,19 @@ const Register = () => {
                   >
                     {isLoading ? (
                       <div className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
                           <path
                             className="opacity-75"
                             fill="currentColor"
@@ -1207,7 +1608,10 @@ const Register = () => {
               <div className="text-center pt-6">
                 <span className="text-sm text-gray-600">
                   Already have an account?{" "}
-                  <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
+                  <Link
+                    to="/login"
+                    className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
+                  >
                     Sign in here
                   </Link>
                 </span>
