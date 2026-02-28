@@ -219,7 +219,6 @@ const createJob = async (req, res) => {
 };
 
 // Get all job postings with search and filters
-// Get all job postings with search and filters
 const getJobs = async (req, res) => {
   try {
     const {
@@ -232,6 +231,7 @@ const getJobs = async (req, res) => {
       salaryMin = "",
       salaryMax = "",
       companyName = "",
+      datePosted = "",
     } = req.query;
 
     const offset = (page - 1) * limit;
@@ -298,6 +298,11 @@ const getJobs = async (req, res) => {
       query += ` AND c.name = $${paramCount}`;
       queryParams.push(companyName);
     }
+    if (datePosted) {
+      paramCount++;
+      query += ` AND j.created_at >= $${paramCount}::date AND j.created_at < ($${paramCount}::date + INTERVAL '1 day')`;
+      queryParams.push(datePosted);
+    }
 
     query += ` ORDER BY j.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
     queryParams.push(limit, offset);
@@ -354,6 +359,11 @@ const getJobs = async (req, res) => {
       countParamCount++;
       countQuery += ` AND c.name = $${countParamCount}`;
       countParams.push(companyName);
+    }
+    if (datePosted) {
+      countParamCount++;
+      countQuery += ` AND j.created_at >= $${countParamCount}::date AND j.created_at < ($${countParamCount}::date + INTERVAL '1 day')`;
+      countParams.push(datePosted);
     }
 
     const countResult = await pool.query(countQuery, countParams);
