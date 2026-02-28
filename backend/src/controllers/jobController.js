@@ -127,16 +127,15 @@ const createJob = async (req, res) => {
       companyNameValue = companyResult.rows[0].name;
     }
 
-    // Insert job with company_id and company_name
+    // Insert job with company_id only (no company_name)
     const result = await pool.query(
       `INSERT INTO job_postings 
-       (company_id, company_name, title, description, requirements, skills_required, location, 
+       (company_id, title, description, requirements, skills_required, location, 
         job_type, experience_level, salary_min, salary_max, currency, posted_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
       [
         companyIdValue || null,
-        companyNameValue,
         title,
         description,
         requirements,
