@@ -10,26 +10,52 @@ const getJobsForAdmin = async (req, res) => {
     const offset = (page - 1) * limit;
 
     let query = `
-      SELECT *
-      FROM job_postings
-      WHERE 1= 1
+      SELECT 
+        j.id,
+        j.company_id,
+        c.name as company_name,
+        j.title,
+        j.description,
+        j.requirements,
+        j.skills_required,
+        j.location,
+        j.job_type,
+        j.experience_level,
+        j.salary_min,
+        j.salary_max,
+        j.currency,
+        j.is_active,
+        j.created_at,
+        j.updated_at,
+        COALESCE(
+          (
+            SELECT ARRAY_AGG(s.name)
+            FROM job_skills js
+            JOIN skills s ON js.skill_id = s.id
+            WHERE js.job_posting_id = j.id
+          ),
+          ARRAY[]::TEXT[]
+        ) as job_skills
+      FROM job_postings j
+      LEFT JOIN companies c ON j.company_id = c.id
+      WHERE 1=1
     `;
     const queryParams = [];
     let paramCount = 0;
 
     if (search) {
       paramCount++;
-      query += ` AND (title ILIKE $${paramCount} OR description ILIKE $${paramCount} OR company_name ILIKE $${paramCount})`;
+      query += ` AND (j.title ILIKE $${paramCount} OR j.description ILIKE $${paramCount} OR c.name ILIKE $${paramCount})`;
       queryParams.push(`%${search}%`);
     }
 
     if (status === "active") {
-      query += ` AND is_active = true`;
+      query += ` AND j.is_active = true`;
     } else if (status === "inactive") {
-      query += ` AND is_active = false`;
+      query += ` AND j.is_active = false`;
     }
 
-    query += ` ORDER BY created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    query += ` ORDER BY j.created_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
     queryParams.push(limit, offset);
 
     const result = await pool.query(query, queryParams);
@@ -37,7 +63,8 @@ const getJobsForAdmin = async (req, res) => {
     // Get total count
     let countQuery = `
       SELECT COUNT(*) 
-      FROM job_postings
+      FROM job_postings j
+      LEFT JOIN companies c ON j.company_id = c.id
       WHERE 1=1
     `;
     const countParams = [];
@@ -45,14 +72,14 @@ const getJobsForAdmin = async (req, res) => {
 
     if (search) {
       countParamCount++;
-      countQuery += ` AND (title ILIKE $${countParamCount} OR description ILIKE $${countParamCount} OR company_name ILIKE $${countParamCount})`;
+      countQuery += ` AND (j.title ILIKE $${countParamCount} OR j.description ILIKE $${countParamCount} OR c.name ILIKE $${countParamCount})`;
       countParams.push(`%${search}%`);
     }
 
     if (status === "active") {
-      countQuery += ` AND is_active = true`;
+      countQuery += ` AND j.is_active = true`;
     } else if (status === "inactive") {
-      countQuery += ` AND is_active = false`;
+      countQuery += ` AND j.is_active = false`;
     }
 
     const countResult = await pool.query(countQuery, countParams);
@@ -61,11 +88,15 @@ const getJobsForAdmin = async (req, res) => {
     res.json({
       jobs: result.rows.map((job) => ({
         id: job.id,
+        companyId: job.company_id,
         companyName: job.company_name,
         title: job.title,
         description: job.description,
         requirements: job.requirements,
-        skillsRequired: job.skills_required,
+        skillsRequired:
+          job.job_skills && job.job_skills.length > 0
+            ? job.job_skills
+            : job.skills_required || [],
         location: job.location,
         jobType: job.job_type,
         experienceLevel: job.experience_level,
@@ -602,7 +633,6 @@ const updateJob = async (req, res) => {
     const { id } = req.params;
     const {
       companyId,
-      companyName,
       title,
       description,
       requirements,
@@ -627,15 +657,12 @@ const updateJob = async (req, res) => {
 
     req.oldValues = oldResult.rows[0];
 
-    // Use company_id if provided, otherwise use company_name
-    let companyIdValue = companyId;
-    let companyNameValue = companyName;
-
-    // If company_id is provided, get company name
-    if (companyIdValue) {
+    // Get company name from companies table if company_id provided
+    let companyNameValue = null;
+    if (companyId) {
       const companyResult = await pool.query(
         "SELECT name FROM companies WHERE id = $1",
-        [companyIdValue],
+        [companyId],
       );
       if (companyResult.rows.length === 0) {
         return res.status(400).json({ error: "Company not found" });
@@ -643,17 +670,16 @@ const updateJob = async (req, res) => {
       companyNameValue = companyResult.rows[0].name;
     }
 
-    // Update job with company_id and company_name
+    // Update job WITHOUT company_name column
     const result = await pool.query(
       `UPDATE job_postings SET 
-       company_id = $1, company_name = $2, title = $3, description = $4, requirements = $5, skills_required = $6,
-       location = $7, job_type = $8, experience_level = $9, salary_min = $10,
-       salary_max = $11, currency = $12, is_active = $13, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $14
+       company_id = $1, title = $2, description = $3, requirements = $4, skills_required = $5,
+       location = $6, job_type = $7, experience_level = $8, salary_min = $9,
+       salary_max = $10, currency = $11, is_active = $12, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $13
        RETURNING *`,
       [
-        companyIdValue || null,
-        companyNameValue,
+        companyId || null,
         title,
         description,
         requirements,
@@ -671,8 +697,11 @@ const updateJob = async (req, res) => {
 
     const job = result.rows[0];
 
-    // Link skills to job if provided
+    // Update skills if provided
     if (skillsRequired && skillsRequired.length > 0) {
+      await pool.query("DELETE FROM job_skills WHERE job_posting_id = $1", [
+        id,
+      ]);
       await linkSkillsToJob(job.id, skillsRequired);
     }
 
